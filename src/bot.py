@@ -6,16 +6,32 @@ from tracker import get_prices, add_coin, remove_coin
 telegram_bot_token = os.environ['BOT_API']
 
 updater = Updater(token=telegram_bot_token, use_context=True)
+job_queue = updater.job_queue
 dispatcher = updater.dispatcher
 
 
 def start(update, context):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id=chat_id, text="Welcome to PykoBot! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /select_currencies to select what currencies to be updated on")
+    context.bot.send_message(chat_id=chat_id, text="Welcome to PykoBot! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
 
 
 def update_crypto_data(update, context):
     chat_id = update.effective_chat.id
+    message = ""
+
+    crypto_data = get_prices()
+    for i in crypto_data:
+        coin = crypto_data[i]["coin"]
+        price = crypto_data[i]["price"]
+        change_day = crypto_data[i]["change_day"]
+        change_hour = crypto_data[i]["change_hour"]
+        message += f"💵 Coin: {coin}\n💲 Price: ${price:,.2f}\n📈 Hour Change: {change_hour:.3f}%\n📈 Day Change: {change_day:.3f}%\n\n"
+
+    context.bot.send_message(chat_id=chat_id, text=message)
+
+
+def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
+    chat_id = 951078147
     message = ""
 
     crypto_data = get_prices()
@@ -75,5 +91,6 @@ dispatcher.add_handler(add_handler)
 dispatcher.add_handler(remove_handler)
 
 dispatcher.add_handler(ConversationHandler(entry_points=[add_handler, remove_handler], states={}, fallbacks=[cancel_handler], conversation_timeout=10))
-
+job_queue.run_repeating(update_crypto_data_periodically, interval=1800, first=0)
 updater.start_polling()
+updater.idle()
