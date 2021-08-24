@@ -12,7 +12,7 @@ dispatcher = updater.dispatcher
 
 def start(update, context):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id=chat_id, text="Welcome to PykoBot! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
+    context.bot.send_message(chat_id=chat_id, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
 
 
 def update_crypto_data(update, context):
