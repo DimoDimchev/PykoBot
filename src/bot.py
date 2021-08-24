@@ -1,6 +1,6 @@
 import telegram
 import os
-from telegram.ext import Handler, Updater, CommandHandler, ConversationHandler
+from telegram.ext import Updater, CommandHandler, ConversationHandler
 from tracker import get_prices, add_coin, remove_coin
 
 telegram_bot_token = os.environ['BOT_API']
@@ -59,14 +59,14 @@ def remove_coin_from_list(update, context):
 
 def cancel(update, context):
     chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id=chat_id, text="Conversation ended")
+    context.bot.send_message(chat_id=chat_id, text="Conversation cancelled.")
 
 
 start_handler = CommandHandler("start", start)
 update_handler = CommandHandler("update", update_crypto_data)
 add_handler = CommandHandler("add", add_coin_to_list, pass_args=True)
 remove_handler = CommandHandler("remove", remove_coin_from_list, pass_args=True)
-cancel_handler = Handler(cancel)
+cancel_handler = CommandHandler("cancel", cancel)
 
 
 dispatcher.add_handler(start_handler)
