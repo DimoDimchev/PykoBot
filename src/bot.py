@@ -91,6 +91,6 @@ dispatcher.add_handler(add_handler)
 dispatcher.add_handler(remove_handler)
 
 dispatcher.add_handler(ConversationHandler(entry_points=[add_handler, remove_handler], states={}, fallbacks=[cancel_handler], conversation_timeout=10))
-job_queue.run_repeating(update_crypto_data_periodically, interval=1800, first=0)
+job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
 updater.start_polling()
 updater.idle()
