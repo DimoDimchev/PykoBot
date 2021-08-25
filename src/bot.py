@@ -4,6 +4,7 @@ import os
 from telegram.ext import Updater, CommandHandler
 from tracker import get_prices, add_coin, remove_coin
 from datetime import datetime
+import time
 
 telegram_bot_token = os.environ['BOT_API']
 
@@ -13,6 +14,9 @@ dispatcher = updater.dispatcher
 
 CHAT_ID = None
 USERNAME = None
+
+call_list = {}
+
 
 def get_current_time():
     now = datetime.now()
@@ -43,10 +47,23 @@ def fetch_crypto_data(call_possible):
         message += f"🪙 Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
 
         if call_possible:
-            if change_hour > 9:
-                requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_hour:.3f}+percent&lang=en-US-Standard-E&rpt=2")
-            elif change_hour < -9:
-                requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_hour:.3f}+percent&lang=en-US-Standard-E&rpt=2")
+            current_time = int(time.time())
+            if change_day > 9:
+                if coin not in call_list.keys():
+                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    call_list[coin] = current_time
+                    return
+                elif current_time - call_list[coin] > 86400:
+                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    return
+            elif change_day < -9:
+                if coin not in call_list.keys():
+                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    call_list[coin] = current_time
+                    return
+                elif current_time - call_list[coin] > 86400:
+                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    return
     return message
 
 
@@ -112,6 +129,6 @@ dispatcher.add_handler(add_handler)
 dispatcher.add_handler(remove_handler)
 
 job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
-job_queue.run_repeating(check_for_drastic_changes, interval=66, first=0)
+job_queue.run_repeating(check_for_drastic_changes, interval=80, first=0)
 updater.start_polling()
 updater.idle()
