@@ -22,26 +22,7 @@ def start(update, context):
     context.bot.send_message(chat_id=chat_id, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
 
 
-def update_crypto_data(update, context):
-    chat_id = update.effective_chat.id
-    timestamp = get_current_time()
-    message = f"⌚ Timestamp: {timestamp}\n\n"
-
-    crypto_data = get_prices()
-    for i in crypto_data:
-        coin = crypto_data[i]["coin"]
-        price = crypto_data[i]["price"]
-        change_day = crypto_data[i]["change_day"]
-        change_hour = crypto_data[i]["change_hour"]
-        day_emoji = '📈' if change_day > 0 else '📉'
-        hour_emoji = '📈' if change_hour > 0 else '📉'
-        message += f"🪙  Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
-
-    context.bot.send_message(chat_id=chat_id, text=message)
-
-
-def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
-    chat_id = 951078147
+def fetch_crypto_data():
     timestamp = get_current_time()
     message = f"⌚ Timestamp: {timestamp}\n\n"
 
@@ -54,6 +35,20 @@ def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
         day_emoji = '📈' if change_day > 0 else '📉'
         hour_emoji = '📈' if change_hour > 0 else '📉'
         message += f"🪙 Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
+
+    return message
+
+
+def update_crypto_data(update, context):
+    chat_id = update.effective_chat.id
+    message = fetch_crypto_data()
+
+    context.bot.send_message(chat_id=chat_id, text=message)
+
+
+def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
+    chat_id = 951078147
+    message = fetch_crypto_data()
 
     context.bot.send_message(chat_id=chat_id, text=message)
 
