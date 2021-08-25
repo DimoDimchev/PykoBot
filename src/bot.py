@@ -1,6 +1,7 @@
 import telegram
+import requests
 import os
-from telegram.ext import Updater, CommandHandler, ConversationHandler
+from telegram.ext import Updater, CommandHandler
 from tracker import get_prices, add_coin, remove_coin
 from datetime import datetime
 
@@ -10,6 +11,8 @@ updater = Updater(token=telegram_bot_token, use_context=True)
 job_queue = updater.job_queue
 dispatcher = updater.dispatcher
 
+CHAT_ID = None
+USERNAME = None
 
 def get_current_time():
     now = datetime.now()
@@ -18,11 +21,14 @@ def get_current_time():
 
 
 def start(update, context):
-    chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id=chat_id, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
+    global CHAT_ID, USERNAME
+    CHAT_ID = update.effective_chat.id
+    USERNAME = update.message.from_user.username
+
+    context.bot.send_message(chat_id=CHAT_ID, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
 
 
-def fetch_crypto_data():
+def fetch_crypto_data(call_possible):
     timestamp = get_current_time()
     message = f"⌚ Timestamp: {timestamp}\n\n"
 
@@ -36,21 +42,28 @@ def fetch_crypto_data():
         hour_emoji = '📈' if change_hour > 0 else '📉'
         message += f"🪙 Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
 
+        if call_possible:
+            if change_hour > 9:
+                requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_hour:.3f}+percent&lang=en-US-Standard-E&rpt=2")
+            elif change_hour < -9:
+                requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_hour:.3f}+percent&lang=en-US-Standard-E&rpt=2")
     return message
 
 
 def update_crypto_data(update, context):
-    chat_id = update.effective_chat.id
-    message = fetch_crypto_data()
+    message = fetch_crypto_data(call_possible=False)
 
-    context.bot.send_message(chat_id=chat_id, text=message)
+    context.bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
-    chat_id = 951078147
-    message = fetch_crypto_data()
+    message = fetch_crypto_data(call_possible=False)
 
-    context.bot.send_message(chat_id=chat_id, text=message)
+    context.bot.send_message(chat_id=CHAT_ID, text=message)
+
+
+def check_for_drastic_changes(context: telegram.ext.CallbackContext):
+    fetch_crypto_data(call_possible=True)
 
 
 def add_coin_to_list(update, context):
@@ -98,7 +111,7 @@ dispatcher.add_handler(update_handler)
 dispatcher.add_handler(add_handler)
 dispatcher.add_handler(remove_handler)
 
-dispatcher.add_handler(ConversationHandler(entry_points=[add_handler, remove_handler], states={}, fallbacks=[cancel_handler], conversation_timeout=10))
 job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
+job_queue.run_repeating(check_for_drastic_changes, interval=66, first=0)
 updater.start_polling()
 updater.idle()
