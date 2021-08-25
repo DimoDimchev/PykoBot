@@ -2,12 +2,19 @@ import telegram
 import os
 from telegram.ext import Updater, CommandHandler, ConversationHandler
 from tracker import get_prices, add_coin, remove_coin
+from datetime import datetime
 
 telegram_bot_token = os.environ['BOT_API']
 
 updater = Updater(token=telegram_bot_token, use_context=True)
 job_queue = updater.job_queue
 dispatcher = updater.dispatcher
+
+
+def get_current_time():
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    return current_time
 
 
 def start(update, context):
@@ -17,6 +24,7 @@ def start(update, context):
 
 def update_crypto_data(update, context):
     chat_id = update.effective_chat.id
+    timestamp = get_current_time()
     message = ""
 
     crypto_data = get_prices()
@@ -25,13 +33,16 @@ def update_crypto_data(update, context):
         price = crypto_data[i]["price"]
         change_day = crypto_data[i]["change_day"]
         change_hour = crypto_data[i]["change_hour"]
-        message += f"💵 Coin: {coin}\n💲 Price: ${price:,.2f}\n📈 Hour Change: {change_hour:.3f}%\n📈 Day Change: {change_day:.3f}%\n\n"
+        day_emoji = '📈' if change_day > 0 else '📉'
+        hour_emoji = '📈' if change_hour > 0 else '📉'
+        message += f"⌚ Timestamp: {timestamp}\n\n₿ Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
 
     context.bot.send_message(chat_id=chat_id, text=message)
 
 
 def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
     chat_id = 951078147
+    timestamp = get_current_time()
     message = ""
 
     crypto_data = get_prices()
@@ -40,7 +51,9 @@ def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
         price = crypto_data[i]["price"]
         change_day = crypto_data[i]["change_day"]
         change_hour = crypto_data[i]["change_hour"]
-        message += f"💵 Coin: {coin}\n💲 Price: ${price:,.2f}\n📈 Hour Change: {change_hour:.3f}%\n📈 Day Change: {change_day:.3f}%\n\n"
+        day_emoji = '📈' if change_day > 0 else '📉'
+        hour_emoji = '📈' if change_hour > 0 else '📉'
+        message += f"⌚ Timestamp: {timestamp}\n\n₿ Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
 
     context.bot.send_message(chat_id=chat_id, text=message)
 
