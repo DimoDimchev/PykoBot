@@ -25,7 +25,7 @@ def start(update, context):
 def update_crypto_data(update, context):
     chat_id = update.effective_chat.id
     timestamp = get_current_time()
-    message = ""
+    message = f"⌚ Timestamp: {timestamp}\n\n"
 
     crypto_data = get_prices()
     for i in crypto_data:
@@ -35,7 +35,7 @@ def update_crypto_data(update, context):
         change_hour = crypto_data[i]["change_hour"]
         day_emoji = '📈' if change_day > 0 else '📉'
         hour_emoji = '📈' if change_hour > 0 else '📉'
-        message += f"⌚ Timestamp: {timestamp}\n\n₿ Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
+        message += f"🪙  Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
 
     context.bot.send_message(chat_id=chat_id, text=message)
 
