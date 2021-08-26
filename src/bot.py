@@ -56,7 +56,7 @@ def fetch_crypto_data(call_possible: False):
                 elif current_time - call_list[coin] > 86400:
                     requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
                     return
-            elif change_day < 9:
+            elif change_day < -9:
                 if coin not in call_list.keys():
                     requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
                     call_list[coin] = current_time
