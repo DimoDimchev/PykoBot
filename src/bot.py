@@ -32,7 +32,7 @@ def start(update, context):
     context.bot.send_message(chat_id=CHAT_ID, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
 
 
-def fetch_crypto_data(call_possible):
+def fetch_crypto_data(call_possible: False):
     timestamp = get_current_time()
     message = f"⌚ Timestamp: {timestamp}\n\n"
 
@@ -56,7 +56,7 @@ def fetch_crypto_data(call_possible):
                 elif current_time - call_list[coin] > 86400:
                     requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
                     return
-            elif change_day < -9:
+            elif change_day < 9:
                 if coin not in call_list.keys():
                     requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
                     call_list[coin] = current_time
@@ -68,19 +68,19 @@ def fetch_crypto_data(call_possible):
 
 
 def update_crypto_data(update, context):
-    message = fetch_crypto_data(call_possible=False)
+    message = fetch_crypto_data(False)
 
     context.bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
-    message = fetch_crypto_data(call_possible=False)
+    message = fetch_crypto_data(False)
 
     context.bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def check_for_drastic_changes(context: telegram.ext.CallbackContext):
-    fetch_crypto_data(call_possible=True)
+    fetch_crypto_data(True)
 
 
 def add_coin_to_list(update, context):
@@ -129,6 +129,6 @@ dispatcher.add_handler(add_handler)
 dispatcher.add_handler(remove_handler)
 
 job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
-job_queue.run_repeating(check_for_drastic_changes, interval=80, first=0)
+job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0)
 updater.start_polling()
 updater.idle()
