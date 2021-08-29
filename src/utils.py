@@ -19,6 +19,10 @@ def get_prices():
     return data
 
 
+def call_user(username, coin, percentage, direction):
+    requests.get(f"http://api.callmebot.com/start.php?user=@{username}&text={coin}+has+{direction}+in+price+by+{percentage:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+
+
 def add_coin(coin_to_add):
     if coin_to_add not in coins:
         coins.append(coin_to_add)
