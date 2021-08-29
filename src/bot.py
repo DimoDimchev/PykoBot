@@ -1,8 +1,7 @@
 import telegram
-import requests
 import os
 from telegram.ext import Updater, CommandHandler
-from tracker import get_prices, add_coin, remove_coin
+from utils import get_prices, add_coin, remove_coin, call_user
 from datetime import datetime
 import time
 
@@ -50,32 +49,32 @@ def fetch_crypto_data(call_possible: False):
             current_time = int(time.time())
             if change_day > 9:
                 if coin not in call_list.keys():
-                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
                     call_list[coin] = current_time
+                    call_user(USERNAME, coin, change_day, 'increased')
                     return
                 elif current_time - call_list[coin] > 86400:
-                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+increased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    call_user(USERNAME, coin, change_day, 'increased')
+                    call_list[coin] = current_time
                     return
             elif change_day < -9:
                 if coin not in call_list.keys():
-                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    call_user(USERNAME, coin, change_day, 'decreased')
                     call_list[coin] = current_time
                     return
                 elif current_time - call_list[coin] > 86400:
-                    requests.get(f"http://api.callmebot.com/start.php?user=@{USERNAME}&text={coin}+has+decreased+in+price+by+{change_day:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
+                    call_user(USERNAME, coin, change_day, 'decreased')
+                    call_list[coin] = current_time
                     return
     return message
 
 
 def update_crypto_data(update, context):
     message = fetch_crypto_data(False)
-
     context.bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
     message = fetch_crypto_data(False)
-
     context.bot.send_message(chat_id=CHAT_ID, text=message)
 
 
