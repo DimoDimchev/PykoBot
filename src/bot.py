@@ -1,10 +1,8 @@
 import telegram
 import os
 from telegram.ext import Updater, CommandHandler
-from utils import get_prices, add_coin, remove_coin, call_user, eastern, get_hot_news, strip_from_bad_chars
-from datetime import datetime
+from utils import get_prices, add_coin, remove_coin, call_user, get_current_time, get_hot_news, strip_from_bad_chars
 import time
-import json
 
 telegram_bot_token = os.environ['BOT_API']
 
@@ -16,12 +14,6 @@ CHAT_ID = None
 USERNAME = None
 
 call_list = {}
-
-
-def get_current_time():
-    now = datetime.now(eastern)
-    current_time = now.strftime("%H:%M:%S")
-    return current_time
 
 
 def start(update, context):

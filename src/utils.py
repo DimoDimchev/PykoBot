@@ -1,9 +1,16 @@
 import requests
 from pytz import timezone
+from datetime import datetime
 
 coins = ["BTC", "ADA", "DOGE"]
 
 eastern = timezone('Europe/Sofia')
+
+
+def get_current_time():
+    now = datetime.now(eastern)
+    current_time = now.strftime("%H:%M:%S")
+    return current_time
 
 
 def get_prices():
