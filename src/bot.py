@@ -88,7 +88,8 @@ def check_for_hot_news(context: telegram.ext.CallbackContext):
         headline = f'➡️ [{title}]({url})'
         message += f'{headline}\n\n'
 
-    context.bot.send_message(chat_id=CHAT_ID, text=message, parse_mode='MarkdownV2', disable_web_page_preview=True)
+    if CHAT_ID:
+        context.bot.send_message(chat_id=CHAT_ID, text=message, parse_mode='MarkdownV2', disable_web_page_preview=True)
 
 
 def add_coin_to_list(update, context):
@@ -138,6 +139,6 @@ dispatcher.add_handler(remove_handler)
 
 job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
 job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0)
-job_queue.run_repeating(check_for_hot_news, interval=21600, first=1)
+job_queue.run_repeating(check_for_hot_news, interval=21600, first=5)
 updater.start_polling()
 updater.idle()
