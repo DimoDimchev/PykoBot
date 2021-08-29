@@ -1,18 +1,10 @@
 import requests
-from datetime import tzinfo, timedelta
+from pytz import timezone
 
 coins = ["BTC", "ADA", "DOGE"]
 
 
-class EET(tzinfo):
-    def utcoffset(self, dt):
-        return timedelta(hours=+2)
-
-    def tzname(self, dt):
-        return 'EET'
-
-    def dst(self, dt):
-        return timedelta(0)
+eastern = timezone('Europe/Sofia')
 
 
 def get_prices():
