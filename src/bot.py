@@ -139,6 +139,6 @@ dispatcher.add_handler(remove_handler)
 
 job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
 job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0)
-job_queue.run_repeating(check_for_hot_news, interval=10, first=5)
+job_queue.run_repeating(check_for_hot_news, interval=21600, first=5)
 updater.start_polling()
 updater.idle()
