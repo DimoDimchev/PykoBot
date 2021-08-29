@@ -1,6 +1,18 @@
 import requests
+from datetime import tzinfo, timedelta
 
 coins = ["BTC", "ADA", "DOGE"]
+
+
+class EET(tzinfo):
+    def utcoffset(self, dt):
+        return timedelta(hours=+2)
+
+    def tzname(self, dt):
+        return 'EET'
+
+    def dst(self, dt):
+        return timedelta(0)
 
 
 def get_prices():

@@ -1,7 +1,7 @@
 import telegram
 import os
 from telegram.ext import Updater, CommandHandler
-from utils import get_prices, add_coin, remove_coin, call_user
+from utils import get_prices, add_coin, remove_coin, call_user, EET
 from datetime import datetime
 import time
 
@@ -18,7 +18,7 @@ call_list = {}
 
 
 def get_current_time():
-    now = datetime.now()
+    now = datetime.now(EET()).date()
     current_time = now.strftime("%H:%M:%S")
     return current_time
 
