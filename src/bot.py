@@ -1,9 +1,10 @@
 import telegram
 import os
 from telegram.ext import Updater, CommandHandler
-from utils import get_prices, add_coin, remove_coin, call_user, eastern
+from utils import get_prices, add_coin, remove_coin, call_user, eastern, get_hot_news, strip_from_bad_chars
 from datetime import datetime
 import time
+import json
 
 telegram_bot_token = os.environ['BOT_API']
 
@@ -28,7 +29,7 @@ def start(update, context):
     CHAT_ID = update.effective_chat.id
     USERNAME = update.message.from_user.username
 
-    context.bot.send_message(chat_id=CHAT_ID, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
+    context.bot.send_message(chat_id=CHAT_ID, text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur! I will also send you some hot news at certain times in the day!\n\n▶️ Type /update to get the latest info on your selected crypto\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist.\n\nInitial currencies in watchlist are: BTC, ADA, DOGE", parse_mode='html')
 
 
 def fetch_crypto_data(call_possible: False):
@@ -82,6 +83,22 @@ def check_for_drastic_changes(context: telegram.ext.CallbackContext):
     fetch_crypto_data(True)
 
 
+def check_for_hot_news(context: telegram.ext.CallbackContext):
+    json_response = get_hot_news()
+    news = json_response['results']
+
+    message = f'🗞️ Your news at: {get_current_time()}\n\n'
+
+    for i in range(5):
+        article = news[i]
+        url = article['url']
+        title = strip_from_bad_chars(article['title'])
+        headline = f'➡️ [{title}]({url})'
+        message += f'{headline}\n\n'
+
+    context.bot.send_message(chat_id=CHAT_ID, text=message, parse_mode='MarkdownV2', disable_web_page_preview=True)
+
+
 def add_coin_to_list(update, context):
     chat_id = update.effective_chat.id
 
@@ -129,5 +146,6 @@ dispatcher.add_handler(remove_handler)
 
 job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0)
 job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0)
+job_queue.run_repeating(check_for_hot_news, interval=21600, first=1)
 updater.start_polling()
 updater.idle()
