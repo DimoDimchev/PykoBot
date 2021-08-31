@@ -2,9 +2,14 @@ import requests
 from pytz import timezone
 from datetime import datetime
 
-coins = ["BTC", "ADA", "DOGE"]
+user_dict = {}
 
 eastern = timezone('Europe/Sofia')
+
+
+def add_user(user):
+    if user not in user_dict.keys():
+        user_dict[user] = ["ADA", "BTC", "DOGE"]
 
 
 def get_current_time():
@@ -13,9 +18,9 @@ def get_current_time():
     return current_time
 
 
-def get_prices():
+def get_prices(user):
     crypto_data = requests.get(
-        "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(",".join(coins))).json()[
+        "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(",".join(user_dict[user]))).json()[
         "RAW"]
 
     data = {}
@@ -66,17 +71,17 @@ def call_user(username, coin, percentage, direction):
         f"http://api.callmebot.com/start.php?user=@{username}&text={coin}+has+{direction}+in+price+by+{percentage:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
 
 
-def add_coin(coin_to_add):
-    if coin_to_add not in coins:
-        coins.append(coin_to_add)
+def add_coin(coin_to_add, user):
+    if coin_to_add not in user_dict[user]:
+        user_dict[user].append(coin_to_add)
         return True
     else:
         return False
 
 
-def remove_coin(coin_to_remove):
-    if coin_to_remove in coins:
-        coins.remove(coin_to_remove)
+def remove_coin(coin_to_remove, user):
+    if coin_to_remove in user_dict[user]:
+        user_dict[user].remove(coin_to_remove)
         return True
     else:
         return False
