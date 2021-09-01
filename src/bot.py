@@ -23,13 +23,13 @@ def start(update, context):
                              parse_mode='html')
 
 
-# subscribe the user to message updates on the crypto in their watchlist. Updates are sent every 900 seconds(15 min)
+# subscribe the user to message updates on the crypto in their watchlist. Updates are sent every 7200 seconds(2 h)
 def update(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='✅ You will now be updated on the latest prices of your selected crypto')
 
-    # add a job to the job_queue which will repeat itself every 900 seconds
-    context.job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0,
+    # add a job to the job_queue which will repeat itself every 7200 seconds
+    context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
                                     context=[update.message.chat_id, update.message.from_user.username])
 
 
