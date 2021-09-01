@@ -49,7 +49,7 @@ def news(update, context):
                              text='✅ You will now get news updates 4 times a day')
 
     # add a job to the job queue which will repeat itself every 21600 seconds
-    context.job_queue.run_repeating(check_for_hot_news, interval=2, first=0,
+    context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
                                     context=update.message.chat_id)
 
 
