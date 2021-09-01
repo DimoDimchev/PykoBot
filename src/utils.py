@@ -8,12 +8,6 @@ user_dict = {}
 eastern = timezone('Europe/Sofia')
 
 
-# add user to user_dict and assign the default cryptocurrencies to them
-def add_user(user):
-    if user not in user_dict.keys():
-        user_dict[user] = ["ADA", "BTC", "DOGE"]
-
-
 # fetch the current time(EEST)
 def get_current_time():
     now = datetime.now(eastern)
@@ -21,32 +15,7 @@ def get_current_time():
     return current_time
 
 
-# fetch price info for the currencies in the user's watchlist via the CryptoCompare API
-def get_prices(user):
-    crypto_data = requests.get(
-        "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(
-            ",".join(user_dict[user]))).json()[
-        "RAW"]
-
-    data = {}
-    for i in crypto_data:
-        data[i] = {
-            "coin": i,
-            "price": crypto_data[i]["USD"]["PRICE"],
-            "change_day": crypto_data[i]["USD"]["CHANGEPCT24HOUR"],
-            "change_hour": crypto_data[i]["USD"]["CHANGEPCTHOUR"]
-        }
-
-    return data
-
-
-def get_hot_news():
-    request = requests.get(
-        "https://min-api.cryptocompare.com/data/v2/news/?lang=EN")
-    response = request.json()
-    return response
-
-
+# strip article title from bad characters so it can be passed to MarkdownV2 in Telegram API
 def strip_from_bad_chars(str):
     return str.translate(str.maketrans({" ": r"\-",
                                         "-": r"\-",
@@ -72,6 +41,40 @@ def strip_from_bad_chars(str):
                                         "#": r"\#"}))
 
 
+# fetch price info for the currencies in the user's watchlist via the CryptoCompare API
+def get_prices(user):
+    crypto_data = requests.get(
+        "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(
+            ",".join(user_dict[user]))).json()[
+        "RAW"]
+
+    data = {}
+    for i in crypto_data:
+        data[i] = {
+            "coin": i,
+            "price": crypto_data[i]["USD"]["PRICE"],
+            "change_day": crypto_data[i]["USD"]["CHANGEPCT24HOUR"],
+            "change_hour": crypto_data[i]["USD"]["CHANGEPCTHOUR"]
+        }
+
+    return data
+
+
+# fetch news from the CryptoCompare API
+def get_hot_news():
+    request = requests.get(
+        "https://min-api.cryptocompare.com/data/v2/news/?lang=EN")
+    response = request.json()
+    return response
+
+
+# add user to user_dict and assign the default cryptocurrencies to them
+def add_user(user):
+    if user not in user_dict.keys():
+        user_dict[user] = ["ADA", "BTC", "DOGE"]
+
+
+# call the user via the CallMeBot API
 def call_user(username, coin, percentage, direction):
     requests.get(
         f"http://api.callmebot.com/start.php?user=@{username}&text={coin}+has+{direction}+in+price+by+{percentage:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
