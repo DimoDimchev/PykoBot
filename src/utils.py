@@ -2,22 +2,26 @@ import requests
 from pytz import timezone
 from datetime import datetime
 
+# keep store of all users using the bot and their watchlists
 user_dict = {}
 
 eastern = timezone('Europe/Sofia')
 
 
+# add user to user_dict and assign the default cryptocurrencies to them
 def add_user(user):
     if user not in user_dict.keys():
         user_dict[user] = ["ADA", "BTC", "DOGE"]
 
 
+# fetch the current time(EEST)
 def get_current_time():
     now = datetime.now(eastern)
     current_time = now.strftime("%H:%M:%S")
     return current_time
 
 
+# fetch price info for the currencies in the user's watchlist via the CryptoCompare API
 def get_prices(user):
     crypto_data = requests.get(
         "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(",".join(user_dict[user]))).json()[
@@ -71,6 +75,7 @@ def call_user(username, coin, percentage, direction):
         f"http://api.callmebot.com/start.php?user=@{username}&text={coin}+has+{direction}+in+price+by+{percentage:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
 
 
+# add coin to the user's watchlist
 def add_coin(coin_to_add, user):
     if coin_to_add not in user_dict[user]:
         user_dict[user].append(coin_to_add)
@@ -79,6 +84,7 @@ def add_coin(coin_to_add, user):
         return False
 
 
+# remove coin from the user's watchlist
 def remove_coin(coin_to_remove, user):
     if coin_to_remove in user_dict[user]:
         user_dict[user].remove(coin_to_remove)
@@ -86,6 +92,3 @@ def remove_coin(coin_to_remove, user):
     else:
         return False
 
-
-if __name__ == "__main__":
-    print(get_prices())

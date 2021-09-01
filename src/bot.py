@@ -10,9 +10,12 @@ updater = Updater(token=telegram_bot_token, use_context=True)
 job_queue = updater.job_queue
 dispatcher = updater.dispatcher
 
+
+# keep store of the last time a call was made to the user for each of the currencies
 call_list = {}
 
 
+# add user to list of users and introduce bot
 def start(update, context):
     add_user(update.message.from_user.username)
     context.bot.send_message(chat_id=update.effective_chat.id,
@@ -20,6 +23,7 @@ def start(update, context):
                              parse_mode='html')
 
 
+# fetch info about the cryptocurrencies in the user's watchlist
 def fetch_crypto_data(call_possible: False, username):
     timestamp = get_current_time()
     message = f"⌚ Timestamp: {timestamp}\n\n"
@@ -34,6 +38,7 @@ def fetch_crypto_data(call_possible: False, username):
         hour_emoji = '📈' if change_hour > 0 else '📉'
         message += f"🪙 Coin: {coin}\n🚀 Price: ${price:,.2f}\n{hour_emoji} Hour Change: {change_hour:.3f}%\n{day_emoji} Day Change: {change_day:.3f}%\n\n"
 
+        # call the user if the price of a currency has changed by ±10% over a 24h period
         if call_possible:
             current_time = int(time.time())
             if change_day > 9:
@@ -57,9 +62,12 @@ def fetch_crypto_data(call_possible: False, username):
     return message
 
 
+# subscribe the user to message updates on the crypto in their watchlist. Updates are sent every 900 seconds(15 min)
 def update(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='✅ You will now be updated on the latest prices of your selected crypto')
+
+    # add a job to the job_queue which will repeat itself every 900 seconds
     context.job_queue.run_repeating(update_crypto_data_periodically, interval=900, first=0,
                                     context=[update.message.chat_id, update.message.from_user.username])
 
@@ -70,9 +78,12 @@ def update_crypto_data_periodically(context: telegram.ext.CallbackContext):
     context.bot.send_message(chat_id=context_list[0], text=message)
 
 
+# subscribe the user to call updates on the crypto in their watchlist. Check for drastic fluctuations in price every 81 seconds(requirement for the API through which the calls are made)
 def call(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
+
+    # add a job to the job queue which will repeat itself every 81 seconds
     context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
                                     context=update.message.from_user.username)
 
@@ -81,9 +92,12 @@ def check_for_drastic_changes(context: telegram.ext.CallbackContext):
     fetch_crypto_data(True, context.job.context)
 
 
+# subscribe the user to news updates 4 times in the day(every 6 hours). News are fetched through the CryptoPanic API
 def news(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='✅ You will now get news updates 4 times a day')
+
+    # add a job to the job queue which will repeat itself every 21600 seconds
     context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
                                     context=update.message.chat_id)
 
@@ -104,6 +118,7 @@ def check_for_hot_news(context: telegram.ext.CallbackContext):
     context.bot.send_message(chat_id=context.job.context, text=message, parse_mode='MarkdownV2', disable_web_page_preview=True)
 
 
+# add a currency to the user's watchlist
 def add_coin_to_list(update, context):
     chat_id = update.effective_chat.id
 
@@ -119,6 +134,7 @@ def add_coin_to_list(update, context):
         context.bot.send_message(chat_id=chat_id, text="🤔 What currency do you want to add to watchlist?")
 
 
+# remove a currency from the user's watchlist
 def remove_coin_from_list(update, context):
     chat_id = update.effective_chat.id
 
@@ -134,19 +150,21 @@ def remove_coin_from_list(update, context):
         context.bot.send_message(chat_id=chat_id, text="🤔 What currency do you want to remove from watchlist?")
 
 
-def cancel(update, context):
-    chat_id = update.effective_chat.id
-    context.bot.send_message(chat_id=chat_id, text="Conversation cancelled.")
+# def cancel(update, context):
+#     chat_id = update.effective_chat.id
+#     context.bot.send_message(chat_id=chat_id, text="Conversation cancelled.")
 
 
+# assign a command handler for each command
 start_handler = CommandHandler("start", start)
 update_handler = CommandHandler("update", update)
 news_handler = CommandHandler("news", news)
 call_handler = CommandHandler("call", call)
 add_handler = CommandHandler("add", add_coin_to_list, pass_args=True)
 remove_handler = CommandHandler("remove", remove_coin_from_list, pass_args=True)
-cancel_handler = CommandHandler("cancel", cancel)
+# cancel_handler = CommandHandler("cancel", cancel)
 
+# add all the handlers to the dispatcher
 dispatcher.add_handler(start_handler)
 dispatcher.add_handler(update_handler)
 dispatcher.add_handler(add_handler)
