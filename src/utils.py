@@ -24,7 +24,8 @@ def get_current_time():
 # fetch price info for the currencies in the user's watchlist via the CryptoCompare API
 def get_prices(user):
     crypto_data = requests.get(
-        "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(",".join(user_dict[user]))).json()[
+        "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(
+            ",".join(user_dict[user]))).json()[
         "RAW"]
 
     data = {}
@@ -41,13 +42,14 @@ def get_prices(user):
 
 def get_hot_news():
     request = requests.get(
-        "https://cryptopanic.com/api/v1/posts/?auth_token=146b86de9eec553afcbe86e56e5438498324df97&public=true")
+        "https://min-api.cryptocompare.com/data/v2/news/?lang=EN")
     response = request.json()
     return response
 
 
 def strip_from_bad_chars(str):
-    return str.translate(str.maketrans({"-": r"\-",
+    return str.translate(str.maketrans({" ": r"\-",
+                                        "-": r"\-",
                                         "]": r"\]",
                                         "\\": r"\\",
                                         "^": r"\^",
@@ -91,4 +93,3 @@ def remove_coin(coin_to_remove, user):
         return True
     else:
         return False
-

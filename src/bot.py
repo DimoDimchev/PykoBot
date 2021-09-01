@@ -92,19 +92,19 @@ def check_for_drastic_changes(context: telegram.ext.CallbackContext):
     fetch_crypto_data(True, context.job.context)
 
 
-# subscribe the user to news updates 4 times in the day(every 6 hours). News are fetched through the CryptoPanic API
+# subscribe the user to news updates 4 times in the day(every 6 hours). News are fetched through the CryptoCompare
 def news(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='✅ You will now get news updates 4 times a day')
 
     # add a job to the job queue which will repeat itself every 21600 seconds
-    context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
+    context.job_queue.run_repeating(check_for_hot_news, interval=2, first=0,
                                     context=update.message.chat_id)
 
 
 def check_for_hot_news(context: telegram.ext.CallbackContext):
     json_response = get_hot_news()
-    news = json_response['results']
+    news = json_response['Data']
 
     message = f'🗞️ Your news at: {get_current_time()}\n\n'
 
