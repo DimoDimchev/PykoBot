@@ -14,10 +14,15 @@ dispatcher = updater.dispatcher
 # keep store of the last time a call was made to the user for each of the currencies
 call_list = {}
 
+# keep store of all the users subscribed to calls/updates/news
+users_calls = []
+users_news = []
+users_updates = []
+
 
 # add user to list of users and introduce bot
 def start(update, context):
-    add_user(update.message.from_user.username)
+    add_user(update.message.from_user.username, update.effective_chat.id)
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text="Welcome to PykoBot!! I will update you on the latest prices for selected cryptocurrencies and alert you when significant price changes occur! I will also send you some hot news at certain times in the day!\n\n▶️ Type /add <i>currency name</i> to add currencies to watchlist\n▶️ Type /remove <i>currency name</i> to remove currencies to watchlist\n▶️ Type /updates to receive updates for the currencies in your watchlist\n▶️ Type /news to receive news updates 4 times in the day\n▶️ Type /call to receive a call if one of the currencies in your watchlist experiences a price change of ±10% in 24h\n\nInitial currencies in watchlist are: BTC, ADA, DOGE",
                              parse_mode='html')
@@ -25,32 +30,50 @@ def start(update, context):
 
 # subscribe the user to message updates on the crypto in their watchlist. Updates are sent every 7200 seconds(2 h)
 def update(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='✅ You will now be updated on the latest prices of your selected crypto')
+    user = update.message.from_user.username
+    if user not in users_updates:
+        users_updates.append(user)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='✅ You will now be updated on the latest prices of your selected crypto')
 
-    # add a job to the job_queue which will repeat itself every 7200 seconds
-    context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
-                                    context=[update.message.chat_id, update.message.from_user.username])
+        # add a job to the job_queue which will repeat itself every 7200 seconds
+        context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
+                                        context=[update.message.chat_id, update.message.from_user.username])
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='❌ You are already subscribed to the updates list')
 
 
 # subscribe the user to call updates on the crypto in their watchlist. Check for drastic fluctuations in price every 81 seconds(requirement for the API through which the calls are made)
 def call(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
+    user = update.message.from_user.username
+    if user not in users_calls:
+        users_calls.append(user)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
 
-    # add a job to the job queue which will repeat itself every 81 seconds
-    context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
-                                    context=update.message.from_user.username)
+        # add a job to the job queue which will repeat itself every 81 seconds
+        context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
+                                        context=update.message.from_user.username)
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='❌ You are already subscribed to the calls list')
 
 
 # subscribe the user to news updates 4 times in the day(every 6 hours). News are fetched through the CryptoCompare
 def news(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='✅ You will now get news updates 4 times a day')
+    user = update.message.from_user.username
+    if user not in users_news:
+        users_news.append(user)
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='✅ You will now get news updates 4 times a day')
 
-    # add a job to the job queue which will repeat itself every 21600 seconds
-    context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
-                                    context=update.message.chat_id)
+        # add a job to the job queue which will repeat itself every 21600 seconds
+        context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
+                                        context=update.message.chat_id)
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='❌ You are already subscribed to the news list')
 
 
 # add a currency to the user's watchlist

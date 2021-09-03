@@ -45,7 +45,7 @@ def strip_from_bad_chars(str):
 def get_prices(user):
     crypto_data = requests.get(
         "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={}&tsyms=USD".format(
-            ",".join(user_dict[user]))).json()[
+            ",".join(user_dict[user][0]))).json()[
         "RAW"]
 
     data = {}
@@ -69,9 +69,9 @@ def get_hot_news():
 
 
 # add user to user_dict and assign the default cryptocurrencies to them
-def add_user(user):
+def add_user(user, chat):
     if user not in user_dict.keys():
-        user_dict[user] = ["ADA", "BTC", "DOGE"]
+        user_dict[user] = [["ADA", "BTC", "DOGE"], chat]
 
 
 # call the user via the CallMeBot API
@@ -82,8 +82,8 @@ def call_user(username, coin, percentage, direction):
 
 # add coin to the user's watchlist
 def add_coin(coin_to_add, user):
-    if coin_to_add not in user_dict[user]:
-        user_dict[user].append(coin_to_add)
+    if coin_to_add not in user_dict[user][0]:
+        user_dict[user][0].append(coin_to_add)
         return True
     else:
         return False
@@ -91,8 +91,8 @@ def add_coin(coin_to_add, user):
 
 # remove coin from the user's watchlist
 def remove_coin(coin_to_remove, user):
-    if coin_to_remove in user_dict[user]:
-        user_dict[user].remove(coin_to_remove)
+    if coin_to_remove in user_dict[user][0]:
+        user_dict[user][0].remove(coin_to_remove)
         return True
     else:
         return False
