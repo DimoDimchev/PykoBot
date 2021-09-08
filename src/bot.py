@@ -34,7 +34,7 @@ def update(update, context):
                                  text='✅ You will now be updated on the latest prices of your selected crypto')
 
         # add a job to the job_queue which will repeat itself every 7200 seconds
-        context.job_queue.run_repeating(update_crypto_data_periodically, interval=10, first=0,
+        context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
                                         context=[update.message.chat_id, update.message.from_user.username])
     else:
         context.bot.send_message(chat_id=update.effective_chat.id,
