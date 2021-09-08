@@ -19,7 +19,7 @@ user_dict = {}
 # keep store of all the users subscribed to calls/updates/news
 users_calls = []
 users_news = []
-users_updates = []
+users_updates = {}
 
 eastern = timezone('Europe/Sofia')
 
@@ -29,6 +29,13 @@ def fetch_users_from_db():
     data = collection.find()
     for user in data:
         user_dict[user["user"]] = [user["coins"], user["chat"]]
+
+        if user["updates"]:
+            users_updates[user["user"]] = user["chat"]
+        if user["calls"]:
+            users_calls.append(user["user"])
+        if user["news"]:
+            users_news.append(user["chat"])
 
 
 # fetch the current time(EEST)

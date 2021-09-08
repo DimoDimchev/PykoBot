@@ -1,8 +1,11 @@
 import telegram
 import os
 from telegram.ext import Updater, CommandHandler
-from utils import get_prices, add_coin, remove_coin, users_calls, add_to_updates_list, add_to_calls_list, add_to_news_list, users_updates, users_news, fetch_users_from_db, call_user, get_current_time, get_hot_news, strip_from_bad_chars, add_user
+from utils import get_prices, add_coin, user_dict, remove_coin, users_calls, add_to_updates_list, add_to_calls_list, \
+    add_to_news_list, users_updates, users_news, fetch_users_from_db, call_user, get_current_time, get_hot_news, \
+    strip_from_bad_chars, add_user
 import time
+
 
 fetch_users_from_db()
 telegram_bot_token = os.environ['BOT_API']
@@ -10,7 +13,6 @@ telegram_bot_token = os.environ['BOT_API']
 updater = Updater(token=telegram_bot_token, use_context=True)
 job_queue = updater.job_queue
 dispatcher = updater.dispatcher
-
 
 # keep store of the last time a call was made to the user for each of the currencies
 call_list = {}
@@ -27,7 +29,7 @@ def start(update, context):
 # subscribe the user to message updates on the crypto in their watchlist. Updates are sent every 7200 seconds(2 h)
 def update(update, context):
     user = update.message.from_user.username
-    if user not in users_updates:
+    if user not in users_updates.keys():
         users_updates.append(user)
         add_to_updates_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
@@ -169,8 +171,22 @@ def check_for_hot_news(context: telegram.ext.CallbackContext):
         headline = f'➡️ [{title}]({url})'
         message += f'{headline}\n\n'
 
-    context.bot.send_message(chat_id=context.job.context, text=message, parse_mode='MarkdownV2', disable_web_page_preview=True)
+    context.bot.send_message(chat_id=context.job.context, text=message, parse_mode='MarkdownV2',
+                             disable_web_page_preview=True)
 
+
+def load_preferences(context: telegram.ext.CallbackContext):
+    for user in users_news:
+        context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
+                                        context=user)
+
+    for chat in users_calls:
+        context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
+                                        context=chat)
+
+    for key, value in users_updates.items():
+        context.job_queue.run_repeating(update_crypto_data_periodically, interval=10, first=0,
+                                        context=[value, key])
 
 # def cancel(update, context):
 #     chat_id = update.effective_chat.id
@@ -193,6 +209,10 @@ dispatcher.add_handler(add_handler)
 dispatcher.add_handler(remove_handler)
 dispatcher.add_handler(call_handler)
 dispatcher.add_handler(news_handler)
+
+
+job_queue.run_once(load_preferences, when=0)
+
 
 updater.start_polling()
 updater.idle()
