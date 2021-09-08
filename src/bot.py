@@ -62,7 +62,7 @@ def call(update, context):
 
 # subscribe the user to news updates 4 times in the day(every 6 hours). News are fetched through the CryptoCompare
 def news(update, context):
-    user = update.message.from_user.username
+    user = update.effective_chat.id
     if user not in users_news:
         users_news.append(user)
         add_to_news_list(user)
