@@ -185,7 +185,7 @@ def load_preferences(context: telegram.ext.CallbackContext):
                                         context=chat)
 
     for key, value in users_updates.items():
-        context.job_queue.run_repeating(update_crypto_data_periodically, interval=10, first=0,
+        context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
                                         context=[value, key])
 
 # def cancel(update, context):
