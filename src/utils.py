@@ -1,11 +1,29 @@
 import requests
 from pytz import timezone
 from datetime import datetime
+import pymongo
+import urllib.parse
+import os
+
+password_db = urllib.parse.quote_plus(os.environ['DB_PASS'])
+user_db = urllib.parse.quote_plus(os.environ['DB_USER'])
+
+client = pymongo.MongoClient(
+    f"mongodb+srv://{user_db}:{password_db}@pykocluster.gqxpp.mongodb.net/pykoDB?retryWrites=true&w=majority")
+db = client["pykoDB"]
+collection = db["users"]
 
 # keep store of all users using the bot and their watchlists
 user_dict = {}
 
 eastern = timezone('Europe/Sofia')
+
+
+# fetch all of the users from the database
+def fetch_users_from_db():
+    data = collection.find()
+    for user in data:
+        user_dict[user["user"]] = [user["coins"], user["chat"]]
 
 
 # fetch the current time(EEST)
@@ -68,10 +86,13 @@ def get_hot_news():
     return response
 
 
-# add user to user_dict and assign the default cryptocurrencies to them
+# add user to user_dict and the database and assign the default cryptocurrencies to them
 def add_user(user, chat):
+    fetch_users_from_db()
     if user not in user_dict.keys():
-        user_dict[user] = [["ADA", "BTC", "DOGE"], chat]
+        document = {"user": user, "chat": chat, "coins": ["ADA", "BTC", "DOGE"]}
+        collection.insert_one(document)
+        fetch_users_from_db()
 
 
 # call the user via the CallMeBot API
@@ -80,19 +101,21 @@ def call_user(username, coin, percentage, direction):
         f"http://api.callmebot.com/start.php?user=@{username}&text={coin}+has+{direction}+in+price+by+{percentage:.3f}+percent+today&lang=en-US-Standard-E&rpt=2")
 
 
-# add coin to the user's watchlist
+# add coin to the user's watchlist and update the database accordingly
 def add_coin(coin_to_add, user):
     if coin_to_add not in user_dict[user][0]:
         user_dict[user][0].append(coin_to_add)
+        collection.find_one_and_update({"user": user}, {"$addToSet": {"coins": coin_to_add}})
         return True
     else:
         return False
 
 
-# remove coin from the user's watchlist
+# remove coin from the user's watchlist and update the database accordingly
 def remove_coin(coin_to_remove, user):
     if coin_to_remove in user_dict[user][0]:
         user_dict[user][0].remove(coin_to_remove)
+        collection.find_one_and_update({"user": user}, {"$pullAll": {"coins": [coin_to_remove]}})
         return True
     else:
         return False

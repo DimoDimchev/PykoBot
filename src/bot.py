@@ -1,9 +1,10 @@
 import telegram
 import os
 from telegram.ext import Updater, CommandHandler
-from utils import get_prices, add_coin, remove_coin, call_user, get_current_time, get_hot_news, strip_from_bad_chars, add_user
+from utils import get_prices, add_coin, remove_coin, fetch_users_from_db, call_user, get_current_time, get_hot_news, strip_from_bad_chars, add_user
 import time
 
+fetch_users_from_db()
 telegram_bot_token = os.environ['BOT_API']
 
 updater = Updater(token=telegram_bot_token, use_context=True)
