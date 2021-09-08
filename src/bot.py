@@ -1,7 +1,7 @@
 import telegram
 import os
 from telegram.ext import Updater, CommandHandler
-from utils import get_prices, add_coin, remove_coin, fetch_users_from_db, call_user, get_current_time, get_hot_news, strip_from_bad_chars, add_user
+from utils import get_prices, add_coin, remove_coin, users_calls, add_to_updates_list, add_to_calls_list, add_to_news_list, users_updates, users_news, fetch_users_from_db, call_user, get_current_time, get_hot_news, strip_from_bad_chars, add_user
 import time
 
 fetch_users_from_db()
@@ -14,11 +14,6 @@ dispatcher = updater.dispatcher
 
 # keep store of the last time a call was made to the user for each of the currencies
 call_list = {}
-
-# keep store of all the users subscribed to calls/updates/news
-users_calls = []
-users_news = []
-users_updates = []
 
 
 # add user to list of users and introduce bot
@@ -33,7 +28,7 @@ def start(update, context):
 def update(update, context):
     user = update.message.from_user.username
     if user not in users_updates:
-        users_updates.append(user)
+        add_to_updates_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now be updated on the latest prices of your selected crypto')
 
@@ -49,7 +44,7 @@ def update(update, context):
 def call(update, context):
     user = update.message.from_user.username
     if user not in users_calls:
-        users_calls.append(user)
+        add_to_calls_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
 
@@ -65,7 +60,7 @@ def call(update, context):
 def news(update, context):
     user = update.message.from_user.username
     if user not in users_news:
-        users_news.append(user)
+        add_to_news_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now get news updates 4 times a day')
 
