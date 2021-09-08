@@ -28,12 +28,13 @@ def start(update, context):
 def update(update, context):
     user = update.message.from_user.username
     if user not in users_updates:
+        users_updates.append(user)
         add_to_updates_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now be updated on the latest prices of your selected crypto')
 
         # add a job to the job_queue which will repeat itself every 7200 seconds
-        context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
+        context.job_queue.run_repeating(update_crypto_data_periodically, interval=10, first=0,
                                         context=[update.message.chat_id, update.message.from_user.username])
     else:
         context.bot.send_message(chat_id=update.effective_chat.id,
@@ -44,6 +45,7 @@ def update(update, context):
 def call(update, context):
     user = update.message.from_user.username
     if user not in users_calls:
+        users_calls.append(user)
         add_to_calls_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
@@ -60,6 +62,7 @@ def call(update, context):
 def news(update, context):
     user = update.message.from_user.username
     if user not in users_news:
+        users_news.append(user)
         add_to_news_list(user)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now get news updates 4 times a day')
