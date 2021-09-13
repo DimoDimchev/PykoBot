@@ -30,8 +30,7 @@ def start(update, context):
 def update(update, context):
     user = update.message.from_user.username
     if user not in users_updates.keys():
-        users_updates.append(user)
-        add_to_updates_list(user)
+        add_to_updates_list(user, update.message.chat_id)
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='✅ You will now be updated on the latest prices of your selected crypto')
 
@@ -46,67 +45,67 @@ def update(update, context):
 # subscribe the user to call updates on the crypto in their watchlist. Check for drastic fluctuations in price every 81 seconds(requirement for the API through which the calls are made)
 def call(update, context):
     user = update.message.from_user.username
+    chat = update.effective_chat.id
     if user not in users_calls:
-        users_calls.append(user)
-        add_to_calls_list(user)
-        context.bot.send_message(chat_id=update.effective_chat.id,
+        add_to_calls_list(user, chat)
+        context.bot.send_message(chat_id=chat,
                                  text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
 
         # add a job to the job queue which will repeat itself every 81 seconds
         context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
-                                        context=update.message.from_user.username)
+                                        context=chat)
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id,
+        context.bot.send_message(chat_id=chat,
                                  text='❌ You are already subscribed to the calls list')
 
 
 # subscribe the user to news updates 4 times in the day(every 6 hours). News are fetched through the CryptoCompare
 def news(update, context):
-    user = update.effective_chat.id
+    user = update.message.from_user.username
+    chat = update.effective_chat.id
     if user not in users_news:
-        users_news.append(user)
-        add_to_news_list(user)
-        context.bot.send_message(chat_id=update.effective_chat.id,
+        add_to_news_list(user, chat)
+        context.bot.send_message(chat_id=chat,
                                  text='✅ You will now get news updates 4 times a day')
 
         # add a job to the job queue which will repeat itself every 21600 seconds
         context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
-                                        context=update.message.chat_id)
+                                        context=chat)
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id,
+        context.bot.send_message(chat_id=update.chat,
                                  text='❌ You are already subscribed to the news list')
 
 
 # add a currency to the user's watchlist
 def add_coin_to_list(update, context):
-    chat_id = update.effective_chat.id
+    chat = update.effective_chat.id
 
     if len(context.args) > 0:
         for coin in context.args:
             attempt_to_add = add_coin(coin, update.message.from_user.username)
             if attempt_to_add:
-                context.bot.send_message(chat_id=chat_id, text=f"✅ Successfully added {coin} to list of currencies")
+                context.bot.send_message(chat_id=chat, text=f"✅ Successfully added {coin} to list of currencies")
             else:
-                context.bot.send_message(chat_id=chat_id,
+                context.bot.send_message(chat_id=chat,
                                          text=f"❌ Failed to add {coin} to list of currencies. Check coin name")
     else:
-        context.bot.send_message(chat_id=chat_id, text="🤔 What currency do you want to add to watchlist?")
+        context.bot.send_message(chat_id=chat, text="🤔 What currency do you want to add to watchlist?")
 
 
 # remove a currency from the user's watchlist
 def remove_coin_from_list(update, context):
-    chat_id = update.effective_chat.id
+    chat = update.effective_chat.id
 
     if len(context.args) > 0:
         for coin in context.args:
             attempt_to_remove = remove_coin(coin, update.message.from_user.username)
             if attempt_to_remove:
-                context.bot.send_message(chat_id=chat_id, text=f"✅ Successfully removed {coin} from list of currencies")
+                context.bot.send_message(chat_id=chat, text=f"✅ Successfully removed {coin} from list of currencies")
             else:
-                context.bot.send_message(chat_id=chat_id,
+                context.bot.send_message(chat_id=chat,
                                          text=f"❌ Failed to remove {coin} to list of currencies. Check coin name")
     else:
-        context.bot.send_message(chat_id=chat_id, text="🤔 What currency do you want to remove from watchlist?")
+        context.bot.send_message(chat_id=chat, text="🤔 What currency do you want to remove from watchlist?")
 
 
 # fetch info about the cryptocurrencies in the user's watchlist
@@ -176,9 +175,9 @@ def check_for_hot_news(context: telegram.ext.CallbackContext):
 
 
 def load_preferences(context: telegram.ext.CallbackContext):
-    for user in users_news:
+    for chat in users_news:
         context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
-                                        context=user)
+                                        context=chat)
 
     for chat in users_calls:
         context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
@@ -188,10 +187,6 @@ def load_preferences(context: telegram.ext.CallbackContext):
         context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
                                         context=[value, key])
 
-# def cancel(update, context):
-#     chat_id = update.effective_chat.id
-#     context.bot.send_message(chat_id=chat_id, text="Conversation cancelled.")
-
 
 # assign a command handler for each command
 start_handler = CommandHandler("start", start)
@@ -200,7 +195,6 @@ news_handler = CommandHandler("news", news)
 call_handler = CommandHandler("call", call)
 add_handler = CommandHandler("add", add_coin_to_list, pass_args=True)
 remove_handler = CommandHandler("remove", remove_coin_from_list, pass_args=True)
-# cancel_handler = CommandHandler("cancel", cancel)
 
 # add all the handlers to the dispatcher
 dispatcher.add_handler(start_handler)

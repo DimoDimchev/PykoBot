@@ -27,15 +27,16 @@ eastern = timezone('Europe/Sofia')
 # fetch all of the users from the database
 def fetch_users_from_db():
     data = collection.find()
-    for user in data:
-        user_dict[user["user"]] = [user["coins"], user["chat"]]
+    if data:
+        for user in data:
+            user_dict[user["user"]] = [user["coins"], user["chat"]]
 
-        if user["updates"]:
-            users_updates[user["user"]] = user["chat"]
-        if user["calls"]:
-            users_calls.append(user["user"])
-        if user["news"]:
-            users_news.append(user["chat"])
+            if user["updates"]:
+                users_updates[user["user"]] = user["chat"]
+            if user["calls"]:
+                users_calls.append(user["user"])
+            if user["news"]:
+                users_news.append(user["chat"])
 
 
 # fetch the current time(EEST)
@@ -134,13 +135,16 @@ def remove_coin(coin_to_remove, user):
 
 
 # update the user's preferences in the database
-def add_to_news_list(user):
+def add_to_news_list(user, chat):
+    users_news.append(chat)
     collection.find_one_and_update({"user": user}, {"$set": {"news": True}})
 
 
-def add_to_updates_list(user):
+def add_to_updates_list(user, chat):
+    users_updates[user] = chat
     collection.find_one_and_update({"user": user}, {"$set": {"updates": True}})
 
 
-def add_to_calls_list(user):
+def add_to_calls_list(user, chat):
+    users_calls.append(chat)
     collection.find_one_and_update({"user": user}, {"$set": {"calls": True}})
