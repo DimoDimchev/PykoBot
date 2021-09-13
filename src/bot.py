@@ -64,7 +64,7 @@ def call(update, context):
 def news(update, context):
     user = update.message.from_user.username
     chat = update.effective_chat.id
-    if user not in users_news:
+    if chat not in users_news:
         add_to_news_list(user, chat)
         context.bot.send_message(chat_id=chat,
                                  text='✅ You will now get news updates 4 times a day')
