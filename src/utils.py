@@ -134,17 +134,19 @@ def remove_coin(coin_to_remove, user):
         return False
 
 
-# update the user's preferences in the database
+# add user to local news list + update the user's preferences in the db
 def add_to_news_list(user, chat):
     users_news.append(chat)
     collection.find_one_and_update({"user": user}, {"$set": {"news": True}})
 
 
+# add user to local updates list + update the user's preferences in the db
 def add_to_updates_list(user, chat):
     users_updates[user] = chat
     collection.find_one_and_update({"user": user}, {"$set": {"updates": True}})
 
 
-def add_to_calls_list(user, chat):
-    users_calls.append(chat)
+# add user to local call list + update the user's preferences in the db
+def add_to_calls_list(user):
+    users_calls.append(user)
     collection.find_one_and_update({"user": user}, {"$set": {"calls": True}})

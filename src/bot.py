@@ -29,16 +29,17 @@ def start(update, context):
 # subscribe the user to message updates on the crypto in their watchlist. Updates are sent every 7200 seconds(2 h)
 def update(update, context):
     user = update.message.from_user.username
+    chat = update.effective_chat.id
     if user not in users_updates.keys():
-        add_to_updates_list(user, update.message.chat_id)
-        context.bot.send_message(chat_id=update.effective_chat.id,
+        add_to_updates_list(user, chat)
+        context.bot.send_message(chat_id=chat,
                                  text='✅ You will now be updated on the latest prices of your selected crypto')
 
         # add a job to the job_queue which will repeat itself every 7200 seconds
         context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
-                                        context=[update.message.chat_id, update.message.from_user.username])
+                                        context=[chat, user])
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id,
+        context.bot.send_message(chat_id=chat,
                                  text='❌ You are already subscribed to the updates list')
 
 
@@ -47,13 +48,13 @@ def call(update, context):
     user = update.message.from_user.username
     chat = update.effective_chat.id
     if user not in users_calls:
-        add_to_calls_list(user, chat)
+        add_to_calls_list(user)
         context.bot.send_message(chat_id=chat,
                                  text='✅ You will now get calls if there is a drastic change in price in one of your selected crypto')
 
         # add a job to the job queue which will repeat itself every 81 seconds
         context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
-                                        context=chat)
+                                        context=user)
     else:
         context.bot.send_message(chat_id=chat,
                                  text='❌ You are already subscribed to the calls list')
@@ -72,17 +73,18 @@ def news(update, context):
         context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
                                         context=chat)
     else:
-        context.bot.send_message(chat_id=update.chat,
+        context.bot.send_message(chat_id=chat,
                                  text='❌ You are already subscribed to the news list')
 
 
 # add a currency to the user's watchlist
 def add_coin_to_list(update, context):
+    user = update.message.from_user.username
     chat = update.effective_chat.id
 
     if len(context.args) > 0:
         for coin in context.args:
-            attempt_to_add = add_coin(coin, update.message.from_user.username)
+            attempt_to_add = add_coin(coin, user)
             if attempt_to_add:
                 context.bot.send_message(chat_id=chat, text=f"✅ Successfully added {coin} to list of currencies")
             else:
@@ -94,11 +96,12 @@ def add_coin_to_list(update, context):
 
 # remove a currency from the user's watchlist
 def remove_coin_from_list(update, context):
+    user = update.message.from_user.username
     chat = update.effective_chat.id
 
     if len(context.args) > 0:
         for coin in context.args:
-            attempt_to_remove = remove_coin(coin, update.message.from_user.username)
+            attempt_to_remove = remove_coin(coin, user)
             if attempt_to_remove:
                 context.bot.send_message(chat_id=chat, text=f"✅ Successfully removed {coin} from list of currencies")
             else:
@@ -174,18 +177,19 @@ def check_for_hot_news(context: telegram.ext.CallbackContext):
                              disable_web_page_preview=True)
 
 
+# fetch the preferences for all of the users and start jobs for each preference
 def load_preferences(context: telegram.ext.CallbackContext):
     for chat in users_news:
         context.job_queue.run_repeating(check_for_hot_news, interval=21600, first=0,
                                         context=chat)
 
-    for chat in users_calls:
+    for username in users_calls:
         context.job_queue.run_repeating(check_for_drastic_changes, interval=81, first=0,
-                                        context=chat)
+                                        context=username)
 
-    for key, value in users_updates.items():
+    for username, chat in users_updates.items():
         context.job_queue.run_repeating(update_crypto_data_periodically, interval=7200, first=0,
-                                        context=[value, key])
+                                        context=[chat, username])
 
 
 # assign a command handler for each command
